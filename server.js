@@ -16,6 +16,8 @@ app.use(
       "https://arbajtechnology.netlify.app",
       "http://localhost:5173",
     ],
+    methods: ["GET", "POST"],
+    credentials: true,
   }),
 );
 
@@ -26,11 +28,18 @@ app.get("/", (req, res) => {
   res.json({ status: "Server is running!" });
 });
 
+app.get("/health", (req, res) => {
+  res.send("OK");
+});
+
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false,
   },
 });
 
