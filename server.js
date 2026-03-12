@@ -23,7 +23,7 @@ app.use(
 
 app.use(express.json());
 
-// ── Health Check — prevents Render from sleeping ──
+// ── Health Check ──
 app.get("/", (req, res) => {
   res.json({ status: "Server is running!" });
 });
@@ -32,17 +32,18 @@ app.get("/health", (req, res) => {
   res.send("OK");
 });
 
+// ── Nodemailer Transporter (Updated SMTP) ──
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  tls: {
-    rejectUnauthorized: false,
-  },
 });
 
+// ── Contact Form API ──
 app.post("/api/contact", async (req, res) => {
   const { name, email, phone, service, message } = req.body;
 
@@ -54,7 +55,7 @@ app.post("/api/contact", async (req, res) => {
   }
 
   try {
-    await transporter.sendMail({
+    const mailOptions = {
       from: `"Arbaj Technology Website" <${process.env.EMAIL_USER}>`,
       to: process.env.RECEIVER_EMAIL,
       subject: `New Inquiry from ${name}`,
@@ -66,7 +67,9 @@ app.post("/api/contact", async (req, res) => {
         <p><b>Service:</b> ${service || "Not specified"}</p>
         <p><b>Message:</b> ${message || "No message provided"}</p>
       `,
-    });
+    };
+
+    await transporter.sendMail(mailOptions);
 
     res.json({
       success: true,
