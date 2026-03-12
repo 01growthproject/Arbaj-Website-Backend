@@ -7,7 +7,8 @@ dotenv.config();
 
 const app = express();
 
-// ── CORS Fix — allow Netlify & localhost ──
+app.use(express.json());
+
 app.use(
   cors({
     origin: [
@@ -17,55 +18,59 @@ app.use(
       "http://localhost:5173",
     ],
     methods: ["GET", "POST"],
-    credentials: true,
   }),
 );
 
-app.use(express.json());
-
-// ── Health Check ──
+// health check
 app.get("/", (req, res) => {
-  res.json({ status: "Server is running!" });
+  res.send("Server Running");
 });
 
 app.get("/health", (req, res) => {
   res.send("OK");
 });
 
-// ── Nodemailer Transporter (Updated SMTP) ──
+// Gmail SMTP transporter
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
+  service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
 });
 
-// ── Contact Form API ──
-app.post("/api/contact", async (req, res) => {
-  const { name, email, phone, service, message } = req.body;
-
-  if (!name || !email || !phone) {
-    return res.status(400).json({
-      success: false,
-      error: "Required fields missing",
-    });
+// SMTP verify (debug)
+transporter.verify((error, success) => {
+  if (error) {
+    console.log("SMTP ERROR:", error);
+  } else {
+    console.log("SMTP Server Ready");
   }
+});
 
+// contact API
+app.post("/api/contact", async (req, res) => {
   try {
+    const { name, email, phone, service, message } = req.body;
+
+    if (!name || !email || !phone) {
+      return res.status(400).json({
+        success: false,
+        error: "Required fields missing",
+      });
+    }
+
     const mailOptions = {
       from: `"Arbaj Technology Website" <${process.env.EMAIL_USER}>`,
       to: process.env.RECEIVER_EMAIL,
       subject: `New Inquiry from ${name}`,
       html: `
-        <h2>New Contact Form Submission</h2>
-        <p><b>Name:</b> ${name}</p>
-        <p><b>Email:</b> ${email}</p>
-        <p><b>Phone:</b> ${phone}</p>
-        <p><b>Service:</b> ${service || "Not specified"}</p>
-        <p><b>Message:</b> ${message || "No message provided"}</p>
+      <h2>New Contact Form Submission</h2>
+      <p><b>Name:</b> ${name}</p>
+      <p><b>Email:</b> ${email}</p>
+      <p><b>Phone:</b> ${phone}</p>
+      <p><b>Service:</b> ${service || "Not specified"}</p>
+      <p><b>Message:</b> ${message || "No message provided"}</p>
       `,
     };
 
@@ -75,8 +80,8 @@ app.post("/api/contact", async (req, res) => {
       success: true,
       message: "Email sent successfully",
     });
-  } catch (err) {
-    console.error("Email error:", err);
+  } catch (error) {
+    console.log("EMAIL ERROR:", error);
 
     res.status(500).json({
       success: false,
