@@ -30,17 +30,20 @@ app.get("/health", (req, res) => {
   res.send("OK");
 });
 
-// Gmail SMTP transporter
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
+  port: 587,
+  secure: false,
+  requireTLS: true,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  connectionTimeout: 10000,
+  tls: {
+    family: 4,
+  },
 });
+
 // SMTP verify (debug)
 transporter.verify((error, success) => {
   if (error) {
