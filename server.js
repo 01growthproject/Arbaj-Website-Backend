@@ -7,8 +7,24 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+// ── CORS Fix — allow Netlify & localhost ──
+app.use(
+  cors({
+    origin: [
+      "https://arbajtechnologypvtltd.com",
+      "https://www.arbajtechnologypvtltd.com",
+      "https://arbajtechnology.netlify.app",
+      "http://localhost:5173",
+    ],
+  }),
+);
+
 app.use(express.json());
+
+// ── Health Check — prevents Render from sleeping ──
+app.get("/", (req, res) => {
+  res.json({ status: "Server is running!" });
+});
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -38,8 +54,8 @@ app.post("/api/contact", async (req, res) => {
         <p><b>Name:</b> ${name}</p>
         <p><b>Email:</b> ${email}</p>
         <p><b>Phone:</b> ${phone}</p>
-        <p><b>Service:</b> ${service}</p>
-        <p><b>Message:</b> ${message}</p>
+        <p><b>Service:</b> ${service || "Not specified"}</p>
+        <p><b>Message:</b> ${message || "No message provided"}</p>
       `,
     });
 
