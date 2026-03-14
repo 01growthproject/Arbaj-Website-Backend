@@ -1,7 +1,7 @@
 import express from "express";
-import nodemailer from "nodemailer";
 import cors from "cors";
 import dotenv from "dotenv";
+import { Resend } from "resend";
 
 dotenv.config();
 
@@ -21,6 +21,9 @@ app.use(
   }),
 );
 
+// Resend setup
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 // health check
 app.get("/", (req, res) => {
   res.send("Server Running");
@@ -28,29 +31,6 @@ app.get("/", (req, res) => {
 
 app.get("/health", (req, res) => {
   res.send("OK");
-});
-
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  requireTLS: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    family: 4,
-  },
-});
-
-// SMTP verify (debug)
-transporter.verify((error, success) => {
-  if (error) {
-    console.log("SMTP ERROR:", error);
-  } else {
-    console.log("SMTP Server Ready");
-  }
 });
 
 // contact API
@@ -65,8 +45,8 @@ app.post("/api/contact", async (req, res) => {
       });
     }
 
-    const mailOptions = {
-      from: `"Arbaj Technology Website" <${process.env.EMAIL_USER}>`,
+    const { data, error } = await resend.emails.send({
+      from: "Arbaj Technology <onboarding@resend.dev>",
       to: process.env.RECEIVER_EMAIL,
       subject: `New Inquiry from ${name}`,
       html: `
@@ -74,19 +54,25 @@ app.post("/api/contact", async (req, res) => {
       <p><b>Name:</b> ${name}</p>
       <p><b>Email:</b> ${email}</p>
       <p><b>Phone:</b> ${phone}</p>
-      <p><b>Service:</b> ${service || "Not specified"}</p>
+     
       <p><b>Message:</b> ${message || "No message provided"}</p>
       `,
-    };
+    });
 
-    await transporter.sendMail(mailOptions);
+    if (error) {
+      return res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
 
     res.json({
       success: true,
       message: "Email sent successfully",
+      id: data.id,
     });
-  } catch (error) {
-    console.log("EMAIL ERROR:", error);
+  } catch (err) {
+    console.log("EMAIL ERROR:", err);
 
     res.status(500).json({
       success: false,
