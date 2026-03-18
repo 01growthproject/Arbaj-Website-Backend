@@ -16,11 +16,13 @@ app.use(
       "https://www.arbajtechnologypvtltd.com",
       "https://arbajtechnology.netlify.app",
       "http://localhost:5173",
+      "https://arbaj-website-frontend.vercel.app",
     ],
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "OPTIONS"],
   }),
 );
 
+app.options("*", cors());
 // Resend setup
 const resend = new Resend(process.env.RESEND_API_KEY);
 
