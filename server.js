@@ -7,8 +7,6 @@ dotenv.config();
 
 const app = express();
 
-app.use(express.json());
-
 app.use(
   cors({
     origin: [
@@ -21,8 +19,12 @@ app.use(
     methods: ["GET", "POST", "OPTIONS"],
   }),
 );
+app.use(express.json());
 
-app.options("*", cors());
+
+
+
+// app.options("/(*)", cors());
 // Resend setup
 const resend = new Resend(process.env.RESEND_API_KEY);
 
