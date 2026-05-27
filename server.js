@@ -15,6 +15,7 @@ app.use(
       "https://arbajtechnology.netlify.app",
       "http://localhost:5173",
       "https://arbaj-website-frontend.vercel.app",
+      "https://arbaj-website-frontend-git-main-itsritesh02-9921s-projects.vercel.app",
     ],
     methods: ["GET", "POST", "OPTIONS"],
   }),
